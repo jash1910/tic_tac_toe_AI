@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tic Tac Toe</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <h1>Tic Tac Toe</h1>
+  <div id="board"></div>
+  <p id="status"></p>
+  <button onclick="resetGame()">Reset</button>
+
+  <script>
+    const boardEl = document.getElementById("board");
+    const statusEl = document.getElementById("status");
+
+    function renderBoard(board) {
+      boardEl.innerHTML = "";
+      board.forEach((cell, i) => {
+        const cellEl = document.createElement("div");
+        cellEl.className = "cell";
+        cellEl.innerText = cell;
+        cellEl.onclick = () => makeMove(i);
+        boardEl.appendChild(cellEl);
+      });
+    }
+
+    function makeMove(index) {
+      fetch("/move", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ index })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) return alert(data.error);
+        renderBoard(data.board);
+        if (data.winner) statusEl.innerText = `${data.winner} wins!`;
+        else if (data.draw) statusEl.innerText = "It's a draw!";
+        else statusEl.innerText = `${data.current_player}'s turn`;
+      });
+    }
+
+    function resetGame() {
+      fetch("/reset", { method: "POST" })
+        .then(() => {
+          statusEl.innerText = "X's turn";
+          renderBoard([" "," "," "," "," "," "," "," "," "]);
+        });
+    }
+
+    resetGame(); // initialize
+  </script>
+</body>
+</html>
